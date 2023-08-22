@@ -2,20 +2,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class GeneticAlgo : MonoBehaviour
+public class cshGeneticAlgo : MonoBehaviour
 {
     static System.Random random = new();          // 랜덤값 추출을 위한 random 객체
-    static string targetString = "Hello, world!"; // 최종 목표 문자열
+    //static string targetString = "Hello, world!"; // 최종 목표 문자열
     static int populationSize = 100;              // 세대별 유전자 수
     static double mutationRate = 0.01;            // 돌연변이 생성 확률
 
- 
+    static float targetError = 1.0f; // 최종 목표 에러
+    static GameObject[] MainObj; // 배치 할 모든 객체들
     // Start is called before the first frame update
     void Start()
     {
-        Genetic();
+        MainObj = GameObject.FindGameObjectsWithTag("MainObj");
+        
+        //배치할 모든 객체들 확인
+        foreach (GameObject go in MainObj) {
+            Debug.Log(go);
+        }
+
+        //메인 함수 실행
+        //Genetic();
     }
-    
+    /*
     // 유전 알고리즘
     static void Genetic()
     {
@@ -26,7 +35,13 @@ public class GeneticAlgo : MonoBehaviour
         for (int i = 0; i < populationSize; i++)
         {
             // 초기 객체 정보 추출
-            float[] priordis = new float[]
+            float[] error = new float[MainObj.Length]; //이상적인 벽과의 거리
+            
+            foreach(GameObject go in MainObj)
+            {
+                //객체 정보를 가져올 수 있는 스크립트로부터 객체 에러값 가져오기
+                go.GetComponent<cshPriorData>();
+            }
 
             // 랜덤한 문자열 생성
             char[] chars = new char[targetString.Length];
@@ -118,4 +133,5 @@ public class GeneticAlgo : MonoBehaviour
         // while문이 끝나면 세대를 찾았다고 알림
         Debug.Log("Target string found!");
     }
+    */
 }
