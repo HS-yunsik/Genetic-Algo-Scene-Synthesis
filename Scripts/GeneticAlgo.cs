@@ -118,5 +118,4 @@ public class GeneticAlgo : MonoBehaviour
         // while문이 끝나면 세대를 찾았다고 알림
         Debug.Log("Target string found!");
     }
-    */
 }
