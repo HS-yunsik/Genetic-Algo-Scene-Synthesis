@@ -7,8 +7,7 @@ public class cshManager : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-      
-       for (int i = 0; i < transform.childCount; i++)
+        for (int i = 0; i < transform.childCount; i++)
         {
             transform.GetChild(i).gameObject.AddComponent<cshCurrentData>();
         }
@@ -17,6 +16,6 @@ public class cshManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 }

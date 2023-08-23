@@ -8,7 +8,7 @@ public class cshCalcWalldis : MonoBehaviour
     GameObject Wall;
     int Wallnum = 0; // 가장 가까운 벽 index
 
-    private void Start()
+    private void Awake()
     {
         Wall = GameObject.FindGameObjectWithTag("Wall");
     }

@@ -14,13 +14,18 @@ public class cshCurrentData : MonoBehaviour
     float wr = 0.1f;
 
     cshCalcWalldis cshCalcWalldis;
+    GameObject Wall;
+    int Wallnum = 0; // 가장 가까운 벽 index
 
-    GameObject GameManager;
+    private void Awake()
+    {
+        Wall = GameObject.FindGameObjectWithTag("Wall");
+    }
+
+
     // Start is called before the first frame update
     void Start()
     {
-        GameManager = GameObject.FindGameObjectWithTag("GameManager");
-        cshCalcWalldis = GameManager.GetComponent<cshCalcWalldis>();
         //샘플로부터 데이터 추출
         PriorData();
     }
@@ -37,20 +42,45 @@ public class cshCurrentData : MonoBehaviour
     }
     void CurrentData()
     {
-
         //float angle;
         Vector2 xz = new Vector2(transform.position.x, transform.position.z);
-        curDis = cshCalcWalldis.CalcdisWall(xz);
+        curDis = CalcdisWall(xz);
         //본 씬에서 객체의 앞방향이 right vector로 세팅되어있음
         //angle = Vector3.Angle(transform.right, Wall.transform.GetChild(Wallnum).transform.forward);
     }
 
     //샘플로부터 데이터 추출
-    void PriorData()
+    public void PriorData()
     {
         Vector2 xz = new Vector2(transform.position.x, transform.position.z);
-        priorDis = cshCalcWalldis.CalcdisWall(xz);
+        priorDis = CalcdisWall(xz);
         //본 씬에서 객체의 앞방향이 right vector로 세팅되어있음
         //angle = Vector3.Angle(transform.right, Wall.transform.GetChild(Wallnum).transform.forward);
+    }
+
+    //xz 위치 좌표를 받아서 가장 가까운 벽과의 거리를 반환해주는 함수
+    public float CalcdisWall(Vector2 xz)
+    {
+        float dis = 1000.0f;
+        //float angle;
+
+        //가장 가까운 벽찾아서 거리 반환
+        for (int i = 0; i < Wall.transform.childCount; i++)
+        {
+            Vector3 ObjPos = new Vector3(xz.x, 0.0f, xz.y);
+            Vector3 wallPos = new Vector3(Wall.transform.GetChild(i).position.x, 0.0f, Wall.transform.GetChild(i).transform.position.z);
+            Vector3 newdis = (ObjPos - wallPos);
+            newdis = Vector3.Project(newdis, Wall.transform.GetChild(i).transform.forward);
+            if (newdis.magnitude < dis)
+            {
+                dis = newdis.magnitude;
+                Wallnum = i;
+            }
+        }
+        //본 씬에서 객체의 앞방향이 right vector로 세팅되어있음
+        //angle = Vector3.Angle(transform.right, Wall.transform.GetChild(Wallnum).transform.forward);
+        //priorTheta = angle;
+
+        return dis;
     }
 }
