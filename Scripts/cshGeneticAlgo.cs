@@ -9,8 +9,9 @@ public class cshGeneticAlgo : MonoBehaviour
     static GameObject MainObj; // 배치 할 모든 객체들을 담은 부모객체
 
     int generation = 1; // 첫 세대부터 시작
-    List<List<Vector2>> population = new();
+    List<List<List<float>>> population = new();
     List<float> priordis = new();
+    List<float> priorrot = new();
 
 
     bool find = false; // 최적 해를 찾았을 경우를 체크하는 변수
@@ -42,14 +43,18 @@ public class cshGeneticAlgo : MonoBehaviour
         //세대별 객체 수 만큼 초기 객체 정보 설정
         for (int i = 0; i < populationSize; i++)
         {
-            List<Vector2> Individual = new();
+            List<List<float>> Individual = new();
             for (int j = 0; j < MainObj.transform.childCount; j++)
             {
                 // 초기 객체 위치
                 // 3D Scene의 x, z축 가용범위에서 무작위로 객체 배치
                 float x = Random.Range(-5.0f, 5.0f);
                 float z = Random.Range(-7.5f, 8.5f);
-                Vector2 info = new Vector2(x, z);
+                float theta = Random.Range(-2.0f, 2.0f);
+                List<float> info = new();
+                info.Add(x);
+                info.Add(z);
+                info.Add(theta*90);
                 Individual.Add(info);   
             }
             population.Add(Individual);
@@ -61,7 +66,7 @@ public class cshGeneticAlgo : MonoBehaviour
             cshCurrentData cshCurrentData = MainObj.transform.GetChild(i).GetComponent<cshCurrentData>();
             cshCurrentData.PriorData();
             priordis.Add(cshCurrentData.priorDis);
-
+            priorrot.Add(cshCurrentData.priorTheta);
         }
     }
 
@@ -69,14 +74,14 @@ public class cshGeneticAlgo : MonoBehaviour
     void Genetic()
     {
         // 교배를 위한 객체들을 담는 공간 
-        List<List<Vector2>> matingPool = new();
+        List<List<List<float>>> matingPool = new();
 
         // 해당 세대에서 가장 우월한 자식의 적합도
         int bestFitness = 0;
-        List<Vector2> bestIndividual = new();
+        List<List<float>> bestIndividual = new();
 
         // n세대의 모든 객체들을 돌면서
-        foreach (List<Vector2> individual in population)
+        foreach (List<List<float>> individual in population)
         {
             //적합도
             int fitness = 0;
@@ -84,10 +89,14 @@ public class cshGeneticAlgo : MonoBehaviour
             for (int i = 0; i < individual.Count; i++)
             {
                 // 모든 객체의 에러(현재 위치에서 벽과의 거리와 이상적인 벽과의 거리의 차이를 계산
-                float error = Mathf.Abs(cshCalcWalldis.CalcdisWall(individual[i]) - priordis[i]);
+                // individual[i][0], individual[i][1], individual[i][2] --> x좌표, y좌표, 벽과의 theta
+                Vector2 disrot = cshCalcWalldis.CalcpriorWall(individual[i][0], individual[i][1], individual[i][2]);
+                float diserror = Mathf.Abs(disrot.x - priordis[i]);
+                float roterror = Mathf.Abs(disrot.y - priorrot[i]);
 
+                float totalerror = diserror + roterror;
                 //각 객체의 차이가 일정값 이하일경우 적합도 증가
-                if (error < errorthreshold)
+                if (totalerror < errorthreshold)
                 {
                     fitness++;
                 }
@@ -111,7 +120,10 @@ public class cshGeneticAlgo : MonoBehaviour
                 find = true;
                 for (int i = 0; i < individual.Count; i++)
                 {
-                    MainObj.transform.GetChild(i).position = new Vector3(individual[i].x, MainObj.transform.GetChild(i).position.y, individual[i].y);
+                    //individual[i][0] --> x좌표
+                    //individual[i][1] --> z좌표
+                    MainObj.transform.GetChild(i).position = new Vector3(individual[i][0], MainObj.transform.GetChild(i).position.y, individual[i][1]);
+                    MainObj.transform.GetChild(i).eulerAngles = new Vector3(0, individual[i][2], 0);
                 } 
             }
         }
@@ -119,23 +131,27 @@ public class cshGeneticAlgo : MonoBehaviour
         //현재 세대에서 가장 우월한 정보로 객체 배치
         for (int i = 0; i < bestIndividual.Count; i++)
         {
-            MainObj.transform.GetChild(i).position = new Vector3(bestIndividual[i].x, MainObj.transform.GetChild(i).position.y, bestIndividual[i].y);
+            //bestIndividual[i][0] --> x좌표
+            //bestIndividual[i][1] --> z좌표
+            //bestIndividual[i][2] --> y축 회전값
+            MainObj.transform.GetChild(i).position = new Vector3(bestIndividual[i][0], MainObj.transform.GetChild(i).position.y, bestIndividual[i][1]);
+            MainObj.transform.GetChild(i).eulerAngles = new Vector3(0, bestIndividual[i][2], 0);
         }
 
         // 교배공간을 기반으로 다시 새로운 유전자로 모든 세대 교체
-        List<List<Vector2>> newPopulation = new();
+        List<List<List<float>>> newPopulation = new();
         
         for (int i = 0; i < populationSize; i++)
         {
             //교배공간에서 랜덤으로 두 부모객체 추출
-            List<Vector2> parentA = matingPool[Random.Range(0, matingPool.Count)];
-            List<Vector2> parentB = matingPool[Random.Range(0, matingPool.Count)];
+            List<List<float>> parentA = matingPool[Random.Range(0, matingPool.Count)];
+            List<List<float>> parentB = matingPool[Random.Range(0, matingPool.Count)];
 
             // A부모와 B부모에서 섞어서 가져올 기준점 생성
             int midpoint = Random.Range(0, parentA.Count);
 
             //추출된 두 부모객체를 기반으로 A부모의 처음부터 midpoint까지, B부모의 midpoint부터 끝까지 추출한 결과를 합성
-            List<Vector2> child = new();
+            List<List<float>> child = new();
             for(int j = 0; j< midpoint; j++)
             {
                 child.Add(parentA[j]);
@@ -147,7 +163,7 @@ public class cshGeneticAlgo : MonoBehaviour
             }
 
             //돌연변이 생성
-            List<Vector2> mutation = child;
+            List<List<float>> mutation = child;
             for (int j = 0; j < mutation.Count; j++)
             {
                 //돌연변이확률(1%) 적용
@@ -157,7 +173,12 @@ public class cshGeneticAlgo : MonoBehaviour
                     //무작위로 객체 배치
                     float x = Random.Range(-5.0f, 5.0f);
                     float z = Random.Range(-7.5f, 8.5f);
-                    mutation[j] = new Vector2(x, z); 
+                    float theta = Random.Range(-2, 2);
+                    mutation[j] = new();
+                    mutation[j].Add(x);
+                    mutation[j].Add(z);
+                    mutation[j].Add(theta*90);
+                    //mutation[j] = new Vector2(x, z);
                 }
                 if (Random.Range(0.0f, 1.0f) < mutationRate)
                 {
@@ -176,9 +197,9 @@ public class cshGeneticAlgo : MonoBehaviour
 
 
         //세대별 모든 객체들 출력
-        foreach (List<Vector2> pop in population)
+        foreach (List<List<float>> pop in population)
         {
-            foreach(Vector2 v in pop)
+            foreach(List<float> v in pop)
             {
                 //Debug.Log($"Generation {generation}: {v}");
             }

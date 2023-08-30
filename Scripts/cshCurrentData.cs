@@ -44,25 +44,29 @@ public class cshCurrentData : MonoBehaviour
     {
         //float angle;
         Vector2 xz = new Vector2(transform.position.x, transform.position.z);
-        curDis = CalcdisWall(xz);
+        Vector2 disrot = CalcpriorWall(xz);
+
         //본 씬에서 객체의 앞방향이 right vector로 세팅되어있음
-        //angle = Vector3.Angle(transform.right, Wall.transform.GetChild(Wallnum).transform.forward);
+        curDis = disrot.x;
+        curTheta = disrot.y;
     }
 
     //샘플로부터 데이터 추출
     public void PriorData()
     {
         Vector2 xz = new Vector2(transform.position.x, transform.position.z);
-        priorDis = CalcdisWall(xz);
+        Vector2 disrot = CalcpriorWall(xz);
+
         //본 씬에서 객체의 앞방향이 right vector로 세팅되어있음
-        //angle = Vector3.Angle(transform.right, Wall.transform.GetChild(Wallnum).transform.forward);
+        priorDis = disrot.x;
+        priorTheta = disrot.y;
     }
 
     //xz 위치 좌표를 받아서 가장 가까운 벽과의 거리를 반환해주는 함수
-    public float CalcdisWall(Vector2 xz)
+    public Vector2 CalcpriorWall(Vector2 xz)
     {
         float dis = 1000.0f;
-        //float angle;
+        float angle;
 
         //가장 가까운 벽찾아서 거리 반환
         for (int i = 0; i < Wall.transform.childCount; i++)
@@ -78,9 +82,9 @@ public class cshCurrentData : MonoBehaviour
             }
         }
         //본 씬에서 객체의 앞방향이 right vector로 세팅되어있음
-        //angle = Vector3.Angle(transform.right, Wall.transform.GetChild(Wallnum).transform.forward);
+        angle = Vector3.Angle(transform.right, Wall.transform.GetChild(Wallnum).transform.forward);
         //priorTheta = angle;
 
-        return dis;
+        return new Vector2(dis, angle);
     }
 }
