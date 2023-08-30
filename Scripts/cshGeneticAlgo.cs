@@ -65,11 +65,15 @@ public class cshGeneticAlgo : MonoBehaviour
         }
     }
 
-    //메인 유전 알고리즘
+    //메인 유전 알고리즘 (한번 돌면 한세대 진행)
     void Genetic()
     {
         // 교배를 위한 객체들을 담는 공간 
         List<List<Vector2>> matingPool = new();
+
+        // 해당 세대에서 가장 우월한 자식의 적합도
+        int bestFitness = 0;
+        List<Vector2> bestIndividual = new();
 
         // n세대의 모든 객체들을 돌면서
         foreach (List<Vector2> individual in population)
@@ -93,6 +97,12 @@ public class cshGeneticAlgo : MonoBehaviour
             {
                 matingPool.Add(individual);
             }
+            
+            if(fitness > bestFitness)
+            {
+                bestFitness = fitness;
+                bestIndividual = individual;
+            }
 
             //모든 객체가 적합도를 만족할 경우(최적 해를 찾았을 경우)
             if (fitness == MainObj.transform.childCount)
@@ -104,6 +114,12 @@ public class cshGeneticAlgo : MonoBehaviour
                     MainObj.transform.GetChild(i).position = new Vector3(individual[i].x, MainObj.transform.GetChild(i).position.y, individual[i].y);
                 } 
             }
+        }
+
+        //현재 세대에서 가장 우월한 정보로 객체 배치
+        for (int i = 0; i < bestIndividual.Count; i++)
+        {
+            MainObj.transform.GetChild(i).position = new Vector3(bestIndividual[i].x, MainObj.transform.GetChild(i).position.y, bestIndividual[i].y);
         }
 
         // 교배공간을 기반으로 다시 새로운 유전자로 모든 세대 교체
@@ -142,6 +158,10 @@ public class cshGeneticAlgo : MonoBehaviour
                     float x = Random.Range(-5.0f, 5.0f);
                     float z = Random.Range(-7.5f, 8.5f);
                     mutation[j] = new Vector2(x, z); 
+                }
+                if (Random.Range(0.0f, 1.0f) < mutationRate)
+                {
+                    // todo 회전돌연변이
                 }
             }
             child = mutation;
